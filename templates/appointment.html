@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}预约看房 - {{ house.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-calendar-check"></i> 预约看房</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                             style="height: 150px;">
+                            <i class="fas fa-home fa-3x text-muted"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <h4>{{ house.title }}</h4>
+                        <p class="text-muted">
+                            <i class="fas fa-map-marker-alt"></i> {{ house.region }} · {{ house.block or '' }}
+                        </p>
+                        <p class="price-tag mb-1">¥{{ house.price }}/月</p>
+                        <p class="text-muted small">
+                            {{ house.rooms }} · {{ house.area }}㎡ · {{ house.direction or '' }}
+                        </p>
+                    </div>
+                </div>
+
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="appointment_date" class="form-label">预约日期 *</label>
+                                <input type="date" class="form-control" id="appointment_date" name="appointment_date" 
+                                       value="{{ request.form.appointment_date or default_date }}" required min="{{ default_date }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="appointment_time" class="form-label">预约时间 *</label>
+                                <input type="time" class="form-control" id="appointment_time" name="appointment_time" 
+                                       value="{{ request.form.appointment_time or default_time }}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="message" class="form-label">留言 (可选)</label>
+                        <textarea class="form-control" id="message" name="message" rows="3" 
+                                  placeholder="请输入您的留言...">{{ request.form.message }}</textarea>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('detail', house_id=house.id) }}" class="btn btn-secondary">返回</a>
+                        <button type="submit" class="btn btn-primary">确认预约</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 设置最小日期为今天
+    const today = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('appointment_date');
+    dateInput.setAttribute('min', today);
+});
+</script>
+{% endblock %}

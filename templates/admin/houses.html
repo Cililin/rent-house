@@ -1,0 +1,350 @@
+<!-- templates/admin/houses.html -->
+{% extends "base.html" %}
+
+{% block title %}房源管理 - 智能租房系统{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-building"></i> 房源管理</h1>
+        <hr>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-list"></i> 房源列表</h5>
+            <a href="{{ url_for('admin_add_house') }}" class="btn btn-light">
+                <i class="fas fa-plus"></i> 添加房源
+            </a>
+        </div>
+    </div>
+
+    <!-- 筛选区域 -->
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-12">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="keyword" class="form-label">搜索关键词</label>
+                        <input type="text" class="form-control" id="keyword" name="keyword"
+                               placeholder="标题/地址" value="{{ request.args.get('keyword', '') }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="status" class="form-label">状态</label>
+                        <select name="status" class="form-select" id="status">
+                            <option value="">全部状态</option>
+                            <option value="available" {% if request.args.get('status') == 'available' %}selected{% endif %}>已审核</option>
+                            <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>待审核</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="region" class="form-label">区域</label>
+                        <select name="region" class="form-select" id="region">
+                            <option value="">全部区域</option>
+                            <option value="朝阳区" {% if request.args.get('region') == '朝阳区' %}selected{% endif %}>朝阳区</option>
+                            <option value="海淀区" {% if request.args.get('region') == '海淀区' %}selected{% endif %}>海淀区</option>
+                            <option value="西城区" {% if request.args.get('region') == '西城区' %}selected{% endif %}>西城区</option>
+                            <option value="东城区" {% if request.args.get('region') == '东城区' %}selected{% endif %}>东城区</option>
+                            <option value="丰台区" {% if request.args.get('region') == '丰台区' %}selected{% endif %}>丰台区</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="btn-group" role="group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> 搜索
+                            </button>
+                            <a href="{{ url_for('admin_houses') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-redo"></i> 重置
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 批量操作按钮移到上方 -->
+        {% if houses.items %}
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <input type="checkbox" id="select-all" class="form-check-input">
+                        <label for="select-all" class="form-check-label ms-1">全选</label>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-tasks"></i> 批量操作
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="batchApprove()"><i class="fas fa-check-circle text-success"></i> 批量审核通过</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="batchReject()"><i class="fas fa-times-circle text-warning"></i> 批量下架</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="batchDelete()"><i class="fas fa-trash-alt text-danger"></i> 批量删除</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 房源表格 -->
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th width="40">
+                            <input type="checkbox" id="select-all-header" class="form-check-input">
+                        </th>
+                        <th>ID</th>
+                        <th>图片</th>
+                        <th>标题</th>
+                        <th>区域</th>
+                        <th>价格</th>
+                        <th>户型</th>
+                        <th>状态</th>
+                        <th>发布时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for house in houses.items %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" name="house_ids" value="{{ house.id }}" class="form-check-input">
+                        </td>
+                        <td>{{ house.id }}</td>
+                        <td>
+                            {% if house.image_url %}
+                            <img src="{{ url_for('static', filename=house.image_url.replace('static/', '')) }}"
+                                 alt="{{ house.title }}" class="img-fluid rounded"
+                                 style="width: 80px; height: 60px; object-fit: cover;">
+                            {% else %}
+                            <div class="bg-light d-flex align-items-center justify-content-center rounded"
+                                 style="width: 80px; height: 60px;">
+                                <i class="fas fa-image text-muted"></i>
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('detail', house_id=house.id) }}" target="_blank" class="text-decoration-none">
+                                {{ house.title }}
+                            </a>
+                        </td>
+                        <td>{{ house.region }}</td>
+                        <td><span class="text-primary fw-bold">¥{{ house.price }}</span>/月</td>
+                        <td>{{ house.rooms }}</td>
+                        <td>
+                            {% if house.is_available %}
+                            <span class="badge bg-success">已审核</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">待审核</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ house.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                {% if not house.is_available %}
+                                <a href="{{ url_for('approve_house', house_id=house.id) }}"
+                                   class="btn btn-success"
+                                   onclick="return confirm('确定要审核通过这个房源吗？')"
+                                   title="审核通过">
+                                    <i class="fas fa-check"></i>
+                                </a>
+                                {% endif %}
+                                <a href="{{ url_for('edit_house', house_id=house.id) }}"
+                                   class="btn btn-primary" title="编辑">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ url_for('admin_delete_house', house_id=house.id) }}"
+                                   class="btn btn-danger"
+                                   onclick="return confirm('确定要删除这个房源吗？此操作不可恢复！')" title="删除">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="10" class="text-center py-5">
+                            <i class="fas fa-home fa-3x text-muted mb-3"></i>
+                            <h4 class="text-muted">暂无房源信息</h4>
+                            <p class="text-muted">当前条件下没有找到符合条件的房源</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 分页控件 -->
+        {% if houses.pages > 1 %}
+        <nav aria-label="房源分页">
+            <ul class="pagination justify-content-center">
+                {% if houses.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin_houses', page=houses.prev_num,
+                        keyword=request.args.get('keyword'),
+                        status=request.args.get('status'),
+                        region=request.args.get('region')) }}">上一页</a>
+                </li>
+                {% endif %}
+
+                {% for page_num in houses.iter_pages() %}
+                {% if page_num %}
+                {% if page_num != houses.page %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin_houses', page=page_num,
+                        keyword=request.args.get('keyword'),
+                        status=request.args.get('status'),
+                        region=request.args.get('region')) }}">{{ page_num }}</a>
+                </li>
+                {% else %}
+                <li class="page-item active">
+                    <span class="page-link">{{ page_num }}</span>
+                </li>
+                {% endif %}
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">…</span>
+                </li>
+                {% endif %}
+                {% endfor %}
+
+                {% if houses.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin_houses', page=houses.next_num,
+                        keyword=request.args.get('keyword'),
+                        status=request.args.get('status'),
+                        region=request.args.get('region')) }}">下一页</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 全选功能
+    document.getElementById('select-all').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('input[name="house_ids"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        document.getElementById('select-all-header').checked = this.checked;
+    });
+
+    document.getElementById('select-all-header').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('input[name="house_ids"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        document.getElementById('select-all').checked = this.checked;
+    });
+
+    function getSelectedIds() {
+        const checkboxes = document.querySelectorAll('input[name="house_ids"]:checked');
+        return Array.from(checkboxes).map(cb => parseInt(cb.value));
+    }
+
+    function batchApprove() {
+        const ids = getSelectedIds();
+        if (ids.length === 0) {
+            alert('请至少选择一个房源');
+            return;
+        }
+
+        if (confirm(`确定要审核通过选中的 ${ids.length} 个房源吗？`)) {
+            fetch('{{ url_for("batch_approve_houses") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({house_ids: ids})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`成功审核通过 ${data.count} 个房源`);
+                    location.reload();
+                } else {
+                    alert('操作失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('操作失败');
+            });
+        }
+    }
+
+    function batchReject() {
+        const ids = getSelectedIds();
+        if (ids.length === 0) {
+            alert('请至少选择一个房源');
+            return;
+        }
+
+        if (confirm(`确定要下架选中的 ${ids.length} 个房源吗？`)) {
+            fetch('{{ url_for("batch_reject_houses") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({house_ids: ids})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`成功下架 ${data.count} 个房源`);
+                    location.reload();
+                } else {
+                    alert('操作失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('操作失败');
+            });
+        }
+    }
+
+    function batchDelete() {
+        const ids = getSelectedIds();
+        if (ids.length === 0) {
+            alert('请至少选择一个房源');
+            return;
+        }
+
+        if (confirm(`确定要删除选中的 ${ids.length} 个房源吗？此操作不可恢复！`)) {
+            fetch('{{ url_for("batch_delete_houses") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({house_ids: ids})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`成功删除 ${data.count} 个房源`);
+                    location.reload();
+                } else {
+                    alert('操作失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('操作失败');
+            });
+        }
+    }
+</script>
+{% endblock %}

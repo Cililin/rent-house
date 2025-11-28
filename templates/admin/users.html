@@ -1,0 +1,150 @@
+<!-- templates/admin/users.html -->
+{% extends "base.html" %}
+
+{% block title %}用户管理 - 智能租房系统{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-users"></i> 用户管理</h1>
+        <hr>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5>所有用户</h5>
+            <form method="GET" class="d-flex gap-2">
+                <input type="text" class="form-control form-control-sm" name="keyword" placeholder="搜索用户名/邮箱" value="{{ request.args.get('keyword', '') }}">
+                <select name="role" class="form-select form-select-sm">
+                    <option value="">全部角色</option>
+                    <option value="admin" {% if request.args.get('role') == 'admin' %}selected{% endif %}>管理员</option>
+                    <option value="landlord" {% if request.args.get('role') == 'landlord' %}selected{% endif %}>房东</option>
+                    <option value="user" {% if request.args.get('role') == 'user' %}selected{% endif %}>普通用户</option>
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm">搜索</button>
+                <a href="{{ url_for('admin_users') }}" class="btn btn-outline-secondary btn-sm">重置</a>
+            </form>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>用户名</th>
+                        <th>邮箱</th>
+                        <th>地址</th>
+                        <th>角色</th>
+                        <th>注册时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users.items %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.name }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.addr or '-' }}</td>
+                        <td>
+                            {% if user.is_admin %}
+                            <span class="badge bg-warning">管理员</span>
+                            {% elif user.is_landlord %}
+                            <span class="badge bg-success">房东</span>
+                            {% else %}
+                            <span class="badge bg-secondary">普通用户</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                {% if not user.is_admin %}
+                                <a href="{{ url_for('make_admin', user_id=user.id) }}"
+                                   class="btn btn-success"
+                                   onclick="return confirm('确定要将此用户设为管理员吗？')"
+                                   title="设为管理员">
+                                    <i class="fas fa-user-shield"></i>
+                                </a>
+                                {% elif user.id != current_user.id %}
+                                <a href="{{ url_for('remove_admin', user_id=user.id) }}"
+                                   class="btn btn-warning"
+                                   onclick="return confirm('确定要取消此用户的管理员权限吗？')"
+                                   title="取消管理员">
+                                    <i class="fas fa-user-times"></i>
+                                </a>
+                                {% endif %}
+
+                                {% if not user.is_admin and not user.is_landlord %}
+                                <a href="{{ url_for('make_landlord', user_id=user.id) }}"
+                                   class="btn btn-info"
+                                   onclick="return confirm('确定要将此用户设为房东吗？')"
+                                   title="设为房东">
+                                    <i class="fas fa-home"></i>
+                                </a>
+                                {% elif user.is_landlord %}
+                                <a href="{{ url_for('remove_landlord', user_id=user.id) }}"
+                                   class="btn btn-secondary"
+                                   onclick="return confirm('确定要取消此用户的房东权限吗？')"
+                                   title="取消房东">
+                                    <i class="fas fa-user"></i>
+                                </a>
+                                {% endif %}
+
+                                {% if not user.is_admin %}
+                                <a href="{{ url_for('admin_delete_user', user_id=user.id) }}"
+                                   class="btn btn-danger"
+                                   onclick="return confirm('确定要删除此用户吗？此操作不可恢复！')"
+                                   title="删除用户">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 分页控件 -->
+        {% if users.pages > 1 %}
+        <nav aria-label="用户分页">
+            <ul class="pagination justify-content-center">
+                {% if users.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin_users', page=users.prev_num, keyword=request.args.get('keyword'), role=request.args.get('role')) }}">上一页</a>
+                </li>
+                {% endif %}
+
+                {% for page_num in users.iter_pages() %}
+                {% if page_num %}
+                {% if page_num != users.page %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin_users', page=page_num, keyword=request.args.get('keyword'), role=request.args.get('role')) }}">{{ page_num }}</a>
+                </li>
+                {% else %}
+                <li class="page-item active">
+                    <span class="page-link">{{ page_num }}</span>
+                </li>
+                {% endif %}
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">…</span>
+                </li>
+                {% endif %}
+                {% endfor %}
+
+                {% if users.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin_users', page=users.next_num, keyword=request.args.get('keyword'), role=request.args.get('role')) }}">下一页</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

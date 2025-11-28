@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}个性推荐 - 智能租房系统{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1><i class="fas fa-robot text-primary"></i> 为您推荐</h1>
+                <p class="text-muted">基于您的浏览历史和偏好智能推荐的房源</p>
+            </div>
+            <a href="{{ url_for('search') }}" class="btn btn-outline-primary">
+                <i class="fas fa-search"></i> 继续搜索
+            </a>
+        </div>
+
+        {% if houses %}
+        <div class="row">
+            {% for house in houses %}
+            <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                <div class="card house-card h-100">
+                    <div class="position-relative">
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                             style="height: 200px; overflow: hidden;">
+                            {% if house.image_url %}
+                            <img src="{{ url_for('static', filename=house.image_url.replace('static/', '')) }}"
+                                 alt="{{ house.title }}" class="img-fluid"
+                                 style="height: 100%; width: 100%; object-fit: cover;">
+                            {% else %}
+                            <img src="{{ url_for('static', filename='img/house_default.jpg') }}"
+                                 alt="{{ house.title }}" class="img-fluid"
+                                 style="height: 100%; width: 100%; object-fit: cover;">
+                            {% endif %}
+                        </div>
+                        <div class="position-absolute top-0 start-0 m-2">
+                            <span class="badge bg-warning">推荐</span>
+                        </div>
+                        <div class="position-absolute top-0 end-0 m-2">
+                            <span class="badge bg-info">{{ house.page_views or 0 }} 浏览</span>
+                        </div>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ house.title }}</h5>
+                        <p class="price-tag mb-2">¥{{ house.price }}/月</p>
+                        <p class="card-text text-muted small mb-2">
+                            <i class="fas fa-map-marker-alt"></i> {{ house.region }} · {{ house.block or '' }}
+                        </p>
+                        <p class="card-text small mb-3">
+                            {{ house.rooms }} · {{ house.area }}㎡ · {{ house.direction or '' }}
+                        </p>
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge bg-info">{{ house.rent_type }}</span>
+                                <div>
+                                    <a href="{{ url_for('detail', house_id=house.id) }}"
+                                       class="btn btn-sm btn-primary">查看详情</a>
+                                    {% if current_user.is_authenticated %}
+                                    <a href="{{ url_for('collect_house', house_id=house.id) }}"
+                                       class="btn btn-sm btn-outline-secondary collect-btn"
+                                       data-house-id="{{ house.id }}">
+                                        {% if house.id in current_user.get_collected_houses() %}
+                                        <i class="fas fa-heart text-danger"></i> 已收藏
+                                        {% else %}
+                                        <i class="far fa-heart"></i> 收藏
+                                        {% endif %}
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <div class="empty-state">
+                <i class="fas fa-robot fa-4x text-muted mb-3"></i>
+                <h4>暂无个性化推荐</h4>
+                <p class="text-muted">请先浏览一些房源，系统将根据您的兴趣为您推荐</p>
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    <a href="{{ url_for('search') }}" class="btn btn-primary me-md-2">去浏览房源</a>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-primary">返回首页</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .empty-state {
+        max-width: 400px;
+        margin: 0 auto;
+    }
+</style>
+{% endblock %}

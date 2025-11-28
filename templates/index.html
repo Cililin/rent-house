@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}智能租房系统 - 找到您的理想之家{% endblock %}
+
+{% block content %}
+<!-- 搜索区域 -->
+<div class="jumbotron bg-primary text-white rounded p-4 mb-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto text-center">
+            <h1 class="display-4 mb-3">找到您的理想之家</h1>
+            <p class="lead mb-3">智能推荐，精准匹配，让租房更简单</p>
+            <form action="{{ url_for('search') }}" method="get" class="search-box p-3 rounded bg-white">
+                <div class="row g-2">
+                    <div class="col-md-5">
+                        <input type="text" name="keyword" class="form-control form-control-lg"
+                               placeholder="输入小区名或地址..." value="{{ keyword }}">
+                    </div>
+                    <div class="col-md-3">
+                        <select name="region" class="form-select form-select-lg">
+                            <option value="">选择区域</option>
+                            <option value="北京市" {% if region=='北京市' %}selected{% endif %}>北京市</option>
+                            <option value="朝阳区" {% if region=='朝阳区' %}selected{% endif %}>朝阳区</option>
+                            <option value="海淀区" {% if region=='海淀区' %}selected{% endif %}>海淀区</option>
+                            <option value="丰台区" {% if region=='丰台区' %}selected{% endif %}>丰台区</option>
+                            <option value="西城区" {% if region=='西城区' %}selected{% endif %}>西城区</option>
+                            <option value="东城区" {% if region=='东城区' %}selected{% endif %}>东城区</option>
+                            <option value="石景山区" {% if region=='石景山区' %}selected{% endif %}>石景山区</option>
+                            <option value="昌平区" {% if region=='昌平区' %}selected{% endif %}>昌平区</option>
+                            <option value="大兴区" {% if region=='大兴区' %}selected{% endif %}>大兴区</option>
+                            <option value="通州区" {% if region=='通州区' %}selected{% endif %}>通州区</option>
+                            <option value="顺义区" {% if region=='顺义区' %}selected{% endif %}>顺义区</option>
+                            <option value="房山区" {% if region=='房山区' %}selected{% endif %}>房山区</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="rent_type" class="form-select form-select-lg">
+                            <option value="">租赁方式</option>
+                            <option value="整租" {% if rent_type=='整租' %}selected{% endif %}>整租</option>
+                            <option value="合租" {% if rent_type=='合租' %}selected{% endif %}>合租</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-warning btn-lg w-100">
+                            <i class="fas fa-search"></i> 搜索
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- 热门房源 -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-fire text-danger"></i> 热门房源</h2>
+            <a href="{{ url_for('search') }}" class="btn btn-outline-primary">查看更多 <i
+                    class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="row">
+            {% for house in popular_houses %}
+            <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                <div class="card house-card h-100">
+                    <div class="position-relative">
+                        <!-- 热门房源和最新房源部分的卡片 -->
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                             style="height: 200px; overflow: hidden;">
+                            {% if house.image_url %}
+                            <img src="{{ house.image_url }}" alt="{{ house.title }}" class="img-fluid"
+                                 style="height: 100%; width: 100%; object-fit: cover;">
+                            {% else %}
+                            <img src="{{ url_for('static', filename='img/house_default.jpg') }}" alt="{{ house.title }}"
+                                 class="img-fluid" style="height: 100%; width: 100%; object-fit: cover;">
+                            {% endif %}
+                        </div>
+                        <div class="position-absolute top-0 end-0 m-2">
+                            <span class="badge bg-danger">{{ house.page_views or 0 }} 浏览</span>
+                        </div>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title text-truncate">{{ house.title }}</h5>
+                        <p class="price-tag mb-2">¥{{ house.price }}/月</p>
+                        <p class="card-text text-muted small mb-2">
+                            <i class="fas fa-map-marker-alt"></i> {{ house.region }} · {{ house.block or '' }}
+                        </p>
+                        <p class="card-text small mb-3">
+                            {{ house.rooms }} · {{ house.area }}㎡ · {{ house.direction or '' }}
+                        </p>
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge bg-info">{{ house.rent_type }}</span>
+                                <div>
+                                    <a href="{{ url_for('detail', house_id=house.id) }}"
+                                       class="btn btn-sm btn-primary">查看详情</a>
+                                    {% if current_user.is_authenticated %}
+                                    <a href="{{ url_for('collect_house', house_id=house.id) }}"
+                                       class="btn btn-sm btn-outline-secondary collect-btn"
+                                       data-house-id="{{ house.id }}">
+                                        {% if house.id in current_user.get_collected_houses() %}
+                                        <i class="fas fa-heart text-danger"></i> 已收藏
+                                        {% else %}
+                                        <i class="far fa-heart"></i> 收藏
+                                        {% endif %}
+                                    </a>
+
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- 最新房源 -->
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-star text-warning"></i> 最新房源</h2>
+            <a href="{{ url_for('search') }}?sort=new" class="btn btn-outline-primary">查看更多 <i
+                    class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="row">
+            {% for house in new_houses %}
+            <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                <div class="card house-card h-100">
+                    <div class="position-relative">
+                        <!-- 热门房源和最新房源部分的卡片 -->
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                             style="height: 200px; overflow: hidden;">
+                            {% if house.image_url %}
+                            <img src="{{ house.image_url }}" alt="{{ house.title }}" class="img-fluid"
+                                 style="height: 100%; width: 100%; object-fit: cover;">
+                            {% else %}
+                            <img src="{{ url_for('static', filename='img/house_default.jpg') }}" alt="{{ house.title }}"
+                                 class="img-fluid" style="height: 100%; width: 100%; object-fit: cover;">
+                            {% endif %}
+                        </div>
+
+                        <div class="position-absolute top-0 start-0 m-2">
+                            <span class="badge bg-success">新上</span>
+                        </div>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title text-truncate">{{ house.title }}</h5>
+                        <p class="price-tag mb-2">¥{{ house.price }}/月</p>
+                        <p class="card-text text-muted small mb-2">
+                            <i class="fas fa-map-marker-alt"></i> {{ house.region }} · {{ house.block or '' }}
+                        </p>
+                        <p class="card-text small mb-3">
+                            {{ house.rooms }} · {{ house.area }}㎡ · {{ house.direction or '' }}
+                        </p>
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge bg-info">{{ house.rent_type }}</span>
+                                <div>
+                                    <a href="{{ url_for('detail', house_id=house.id) }}"
+                                       class="btn btn-sm btn-primary">查看详情</a>
+                                    {% if current_user.is_authenticated %}
+                                    <a href="{{ url_for('collect_house', house_id=house.id) }}"
+                                       class="btn btn-sm btn-outline-secondary collect-btn"
+                                       data-house-id="{{ house.id }}">
+                                        {% if house.id in current_user.get_collected_houses() %}
+                                        <i class="fas fa-heart text-danger"></i> 已收藏
+                                        {% else %}
+                                        <i class="far fa-heart"></i> 收藏
+                                        {% endif %}
+                                    </a>
+
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- 特色功能 -->
+<div class="row mt-5">
+    <div class="col-12 text-center mb-4">
+        <h2>为什么选择我们？</h2>
+        <p class="text-muted">为您提供最优质的租房体验</p>
+    </div>
+    <div class="col-md-4 text-center mb-4">
+        <div class="feature-icon bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+             style="width: 80px; height: 80px;">
+            <i class="fas fa-robot fa-2x"></i>
+        </div>
+        <h4>智能推荐</h4>
+        <p class="text-muted">基于您的浏览历史和偏好，智能推荐最适合的房源</p>
+    </div>
+    <div class="col-md-4 text-center mb-4">
+        <div class="feature-icon bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+             style="width: 80px; height: 80px;">
+            <i class="fas fa-shield-alt fa-2x"></i>
+        </div>
+        <h4>安全可靠</h4>
+        <p class="text-muted">所有房源经过严格审核，确保信息真实可靠</p>
+    </div>
+    <div class="col-md-4 text-center mb-4">
+        <div class="feature-icon bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+             style="width: 80px; height: 80px;">
+            <i class="fas fa-headset fa-2x"></i>
+        </div>
+        <h4>专业服务</h4>
+        <p class="text-muted">专业的客服团队，为您提供全方位的租房服务</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .feature-icon {
+        transition: transform 0.3s ease;
+    }
+    .feature-icon:hover {
+        transform: scale(1.1);
+    }
+    .jumbotron {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .search-box {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+    }
+</style>
+{% endblock %}

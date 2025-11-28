@@ -1,0 +1,250 @@
+<!-- templates/profile.html -->
+{% extends "base.html" %}
+
+{% block title %}个人中心 - 智能租房系统{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- 用户信息 -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user-circle"></i> 个人信息</h5>
+            </div>
+            <div class="card-body text-center">
+                <!-- 头像显示和上传 -->
+                <div class="profile-avatar mb-3 mx-auto position-relative" style="cursor: pointer;"
+                     onclick="document.getElementById('avatar-upload').click()">
+                    {% if current_user.avatar_url and current_user.avatar_url !=
+                    'https://gitee.com/Cililin/rent-house/raw/master/static/img/default_avatar.png' %}
+                    <!-- 处理上传的头像 -->
+                    {% if current_user.avatar_url.startswith('http') %}
+                    <img src="{{ current_user.avatar_url }}"
+                         alt="头像"
+                         class="rounded-circle"
+                         style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #667eea;">
+                    {% else %}
+                    <img src="{{ url_for('static', filename=current_user.avatar_url.replace('static/', '')) }}"
+                         alt="头像"
+                         class="rounded-circle"
+                         style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #667eea;">
+                    {% endif %}
+                    {% else %}
+                    <div class="d-flex align-items-center justify-content-center rounded-circle"
+                         style="width: 100px; height: 100px; background: #f8f9fa; border: 3px solid #667eea;">
+                        <i class="fas fa-user fa-3x text-primary"></i>
+                    </div>
+                    {% endif %}
+                    <div class="position-absolute bottom-0 end-0 bg-primary rounded-circle d-flex align-items-center justify-content-center"
+                         style="width: 30px; height: 30px;">
+                        <i class="fas fa-camera text-white"></i>
+                    </div>
+                </div>
+
+
+                <!-- 隐藏的文件上传表单 -->
+                <form id="avatar-form" action="{{ url_for('upload_avatar') }}" method="post"
+                      enctype="multipart/form-data" style="display: none;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="file" id="avatar-upload" name="avatar" accept="image/*"
+                           onchange="document.getElementById('avatar-form').submit()">
+                </form>
+
+
+                <h4>{{ current_user.name }}</h4>
+                <p class="text-muted">{{ current_user.email }}</p>
+                {% if current_user.addr %}
+                <p class="text-muted"><i class="fas fa-map-marker-alt"></i> {{ current_user.addr }}</p>
+                {% endif %}
+                {% if current_user.is_admin %}
+                <span class="badge bg-warning mb-3">管理员</span>
+                {% endif %}
+                {% if current_user.is_landlord %}
+                <span class="badge bg-info mb-3">房东</span>
+                {% endif %}
+
+                <div class="user-stats row text-center mt-4">
+                    <div class="col-4">
+                        <div class="stat-number text-primary">{{ collected_houses|length }}</div>
+                        <div class="stat-label small text-muted">收藏</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="stat-number text-success">{{ seen_houses|length }}</div>
+                        <div class="stat-label small text-muted">浏览</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="stat-number text-info">{{ appointments|length }}</div>
+                        <div class="stat-label small text-muted">预约</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 账户安全 -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-shield-alt"></i> 账户安全</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('change_password') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-key"></i> 修改密码
+                    </a>
+                    <a href="{{ url_for('forgot_password') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-question-circle"></i> 忘记密码
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户内容 -->
+    <div class="col-lg-8">
+        <!-- 编辑资料 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-edit"></i> 编辑资料</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('update_profile') }}">
+                    <div class="mb-3">
+                        <label class="form-label">用户名</label>
+                        <div class="form-control-plaintext h5">{{ current_user.name }}</div>
+                        <input type="hidden" name="name" value="{{ current_user.name }}">
+                        <div class="form-text">用户名不可修改</div>
+                    </div>
+
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">邮箱</label>
+                        <input type="email" class="form-control" id="email" name="email"
+                               value="{{ current_user.email }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="addr" class="form-label">地址</label>
+                        <input type="text" class="form-control" id="addr" name="addr"
+                               value="{{ current_user.addr or '' }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> 保存更改</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 收藏房源 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-heart"></i> 收藏的房源</h5>
+            </div>
+            <div class="card-body">
+                {% if collected_houses %}
+                <div class="row">
+                    {% for house in collected_houses %}
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0 me-3">
+                                {% if house.image_url %}
+                                <img src="{{ url_for('static', filename=house.image_url.replace('static/', '')) }}"
+                                     alt="{{ house.title }}" class="img-fluid rounded"
+                                     style="width: 80px; height: 60px; object-fit: cover;">
+                                {% else %}
+                                <div class="bg-light d-flex align-items-center justify-content-center rounded"
+                                     style="width: 80px; height: 60px;">
+                                    <i class="fas fa-home text-muted"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1"><a href="{{ url_for('detail', house_id=house.id) }}">{{ house.title
+                                    }}</a></h6>
+                                <p class="mb-0 text-muted small">¥{{ house.price }}/月</p>
+                                <small class="text-muted">{{ house.region }} · {{ house.rooms }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-heart-broken fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">暂无收藏房源</p>
+                    <a href="{{ url_for('search') }}" class="btn btn-primary">去收藏房源</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 浏览历史 -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history"></i> 浏览历史</h5>
+            </div>
+            <div class="card-body">
+                {% if seen_houses %}
+                <div class="row">
+                    {% for house in seen_houses %}
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0 me-3">
+                                {% if house.image_url %}
+                                <img src="{{ url_for('static', filename=house.image_url.replace('static/', '')) }}"
+                                     alt="{{ house.title }}" class="img-fluid rounded"
+                                     style="width: 80px; height: 60px; object-fit: cover;">
+                                {% else %}
+                                <div class="bg-light d-flex align-items-center justify-content-center rounded"
+                                     style="width: 80px; height: 60px;">
+                                    <i class="fas fa-home text-muted"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1"><a href="{{ url_for('detail', house_id=house.id) }}">{{ house.title
+                                    }}</a></h6>
+                                <p class="mb-0 text-muted small">¥{{ house.price }}/月</p>
+                                <small class="text-muted">{{ house.region }} · {{ house.rooms }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-eye-slash fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">暂无浏览记录</p>
+                    <a href="{{ url_for('search') }}" class="btn btn-primary">去浏览房源</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid #667eea;
+        transition: all 0.3s ease;
+    }
+
+    .profile-avatar:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    .user-stats {
+        border-top: 1px solid #dee2e6;
+        padding-top: 1rem;
+    }
+</style>
+{% endblock %}

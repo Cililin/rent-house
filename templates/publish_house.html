@@ -1,0 +1,159 @@
+<!-- templates/publish_house.html -->
+{% extends "base.html" %}
+
+{% block title %}发布房源 - 智能租房系统{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-home"></i> 发布房源</h1>
+        <hr>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5>房源信息</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">房源标题 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="price" class="form-label">价格（元/月） <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="price" name="price" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="rooms" class="form-label">户型 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="rooms" name="rooms" required>
+                            <option value="">选择户型</option>
+                            <option value="1室0厅">1室0厅</option>
+                            <option value="1室1厅">1室1厅</option>
+                            <option value="2室1厅">2室1厅</option>
+                            <option value="2室2厅">2室2厅</option>
+                            <option value="3室1厅">3室1厅</option>
+                            <option value="3室2厅">3室2厅</option>
+                            <option value="4室及以上">4室及以上</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="area" class="form-label">面积（㎡） <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="area" name="area" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="region" class="form-label">区域 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="region" name="region" required>
+                            <option value="">选择区域</option>
+                            <option value="东城区">东城区</option>
+                            <option value="西城区">西城区</option>
+                            <option value="朝阳区">朝阳区</option>
+                            <option value="海淀区">海淀区</option>
+                            <option value="丰台区">丰台区</option>
+                            <option value="石景山区">石景山区</option>
+                            <option value="通州区">通州区</option>
+                            <option value="昌平区">昌平区</option>
+                            <option value="大兴区">大兴区</option>
+                            <option value="顺义区">顺义区</option>
+                            <option value="房山区">房山区</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="block" class="form-label">板块</label>
+                        <input type="text" class="form-control" id="block" name="block">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="direction" class="form-label">朝向</label>
+                        <select class="form-select" id="direction" name="direction">
+                            <option value="">选择朝向</option>
+                            <option value="朝南">朝南</option>
+                            <option value="朝北">朝北</option>
+                            <option value="朝东">朝东</option>
+                            <option value="朝西">朝西</option>
+                            <option value="南北通透">南北通透</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="rent_type" class="form-label">租赁方式 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="rent_type" name="rent_type" required>
+                            <option value="">选择租赁方式</option>
+                            <option value="整租">整租</option>
+                            <option value="合租">合租</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        <label for="address" class="form-label">详细地址 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="address" name="address" required>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        <label for="facilities" class="form-label">配套设施</label>
+                        <textarea class="form-control" id="facilities" name="facilities" rows="3"
+                                  placeholder="例如：冰箱,洗衣机,空调,暖气,电视,宽带,燃气,停车位"></textarea>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        <label for="highlights" class="form-label">房源亮点</label>
+                        <textarea class="form-control" id="highlights" name="highlights" rows="3"
+                                  placeholder="房源的特色和优势"></textarea>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="landlord" class="form-label">房东姓名</label>
+                            <input type="text" class="form-control" id="landlord" name="landlord">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="phone_num" class="form-label">联系电话</label>
+                            <input type="text" class="form-control" id="phone_num" name="phone_num">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <!-- 在 publish_house.html 中添加图片上传字段 -->
+                        <div class="mb-3">
+                            <label for="image" class="form-label">房源主图</label>
+                            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                            <div class="form-text">支持 JPG、PNG、GIF 格式，文件大小不超过 5MB</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="images" class="form-label">房源图片（可多选）</label>
+                            <input type="file" class="form-control" id="images" name="images" accept="image/*" multiple>
+                            <div class="form-text">支持 JPG、PNG、GIF 格式，最多可上传5张图片</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">取消</a>
+                <button type="submit" class="btn btn-primary">发布房源</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

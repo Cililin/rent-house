@@ -1,0 +1,174 @@
+<!-- templates/edit_house.html -->
+{% extends "base.html" %}
+
+{% block title %}编辑房源 - 智能租房系统{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-edit"></i> 编辑房源</h1>
+        <hr>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5>房源信息</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">房源标题 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="title" name="title" value="{{ house.title }}" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="price" class="form-label">价格（元/月） <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="price" name="price" value="{{ house.price }}" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="rooms" class="form-label">户型 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="rooms" name="rooms" value="{{ house.rooms }}" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="area" class="form-label">面积（平方米）</label>
+                        <input type="text" class="form-control" id="area" name="area" value="{{ house.area or '' }}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="direction" class="form-label">朝向</label>
+                        <input type="text" class="form-control" id="direction" name="direction" value="{{ house.direction or '' }}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="rent_type" class="form-label">租赁方式</label>
+                        <select class="form-select" id="rent_type" name="rent_type">
+                            <option value="">请选择</option>
+                            <option value="整租" {% if house.rent_type=='整租' %}selected{% endif %}>整租</option>
+                            <option value="合租" {% if house.rent_type=='合租' %}selected{% endif %}>合租</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="region" class="form-label">区域 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="region" name="region" value="{{ house.region }}" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="block" class="form-label">板块</label>
+                        <input type="text" class="form-control" id="block" name="block" value="{{ house.block or '' }}">
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        <label for="address" class="form-label">详细地址 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="address" name="address" value="{{ house.address }}" required>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        <label for="traffic" class="form-label">交通信息</label>
+                        <textarea class="form-control" id="traffic" name="traffic" rows="2">{{ house.traffic or '' }}</textarea>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        <label for="facilities" class="form-label">配套设施</label>
+                        <textarea class="form-control" id="facilities" name="facilities" rows="2"
+                                  placeholder="多个设施用逗号分隔，如：空调,冰箱,洗衣机">{{ house.facilities or '' }}</textarea>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        <label for="highlights" class="form-label">房源亮点</label>
+                        <textarea class="form-control" id="highlights" name="highlights" rows="2">{{ house.highlights or '' }}</textarea>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        <label for="matching" class="form-label">配套信息</label>
+                        <textarea class="form-control" id="matching" name="matching" rows="2">{{ house.matching or '' }}</textarea>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        <label for="travel" class="form-label">出行信息</label>
+                        <textarea class="form-control" id="travel" name="travel" rows="2">{{ house.travel or '' }}</textarea>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="landlord" class="form-label">房东姓名</label>
+                        <input type="text" class="form-control" id="landlord" name="landlord" value="{{ house.landlord or '' }}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="phone_num" class="form-label">联系电话</label>
+                        <input type="text" class="form-control" id="phone_num" name="phone_num" value="{{ house.phone_num or '' }}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="house_num" class="form-label">房源编号</label>
+                        <input type="text" class="form-control" id="house_num" name="house_num" value="{{ house.house_num or '' }}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="image" class="form-label">房源主图</label>
+                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        <div class="form-text">支持 JPG、PNG、GIF 格式，文件大小不超过 5MB</div>
+                        {% if house.image_url %}
+                        <div class="mt-2">
+                            <img src="{{ house.image_url }}" alt="当前主图" class="img-thumbnail" style="max-height: 100px;">
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="images" class="form-label">房源图片（可多选）</label>
+                        <input type="file" class="form-control" id="images" name="images" accept="image/*" multiple>
+                        <div class="form-text">支持 JPG、PNG、GIF 格式，最多可上传5张图片</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 当前图片预览 -->
+            {% if house.images %}
+            <div class="row mb-3">
+                <div class="col-12">
+                    <label class="form-label">当前房源图片</label>
+                    <div class="row">
+                        {% for img in house.images %}
+                        <div class="col-md-2 mb-2">
+                            <div class="position-relative">
+                                <img src="{{ img.image_url }}" alt="房源图片" class="img-thumbnail" style="height: 100px; width: 100%; object-fit: cover;">
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="{{ url_for('detail', house_id=house.id) }}" class="btn btn-secondary">取消</a>
+                <button type="submit" class="btn btn-primary">保存修改</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

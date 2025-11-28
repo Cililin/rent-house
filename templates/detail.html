@@ -1,0 +1,441 @@
+<!-- templates/detail.html -->
+{% extends "base.html" %}
+
+{% block title %}{{ house.title }} - 智能租房系统{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- 房源详情 -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="{{ url_for('index') }}">首页</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('search') }}">房源搜索</a></li>
+                        <li class="breadcrumb-item active">{{ house.title }}</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="card-body">
+                <!-- 房源图片轮播 -->
+                <div id="houseImageCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+                    <!-- 替换原有的图片收集和轮播代码 -->
+                    <div class="carousel-indicators">
+                        {% set all_images = [] %}
+                        <!-- 确保始终添加主图 -->
+                        {% if house.image_url %}
+                        {% set _ = all_images.append(house.image_url) %}
+                        {% endif %}
+                        <!-- 添加附加图片 -->
+                        {% for img in house.images %}
+                        {% set _ = all_images.append(img.image_url) %}
+                        {% endfor %}
+
+                        {% if all_images|length > 0 %}
+                        {% for i in range(all_images|length) %}
+                        <button type="button" data-bs-target="#houseImageCarousel"
+                                data-bs-slide-to="{{ i }}"
+                                {% if i== 0 %}class="active" {% endif %}
+                                aria-current="{% if i == 0 %}true{% endif %}"
+                                aria-label="Slide {{ i + 1 }}"></button>
+                        {% endfor %}
+                        {% else %}
+                        <button type="button" data-bs-target="#houseImageCarousel"
+                                data-bs-slide-to="0" class="active"
+                                aria-current="true" aria-label="Slide 1"></button>
+                        {% endif %}
+                    </div>
+
+                    <div class="carousel-inner rounded" style="height: 400px;">
+                        {% if all_images|length > 0 %}
+                        {% for image in all_images %}
+                        <div class="carousel-item {% if loop.first %}active{% endif %}">
+                            {% if image.startswith('http') or image.startswith('/') %}
+                            <img src="{{ image }}" class="d-block w-100 h-100" style="object-fit: cover;"
+                                 alt="{{ house.title }} - 图片 {{ loop.index }}">
+                            {% else %}
+                            <img src="{{ url_for('static', filename=image.replace('static/', '')) }}"
+                                 class="d-block w-100 h-100" style="object-fit: cover;"
+                                 alt="{{ house.title }} - 图片 {{ loop.index }}">
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="carousel-item active">
+                            <div class="d-flex align-items-center justify-content-center h-100 bg-light">
+                                <i class="fas fa-home fa-3x text-muted"></i>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if all_images|length > 1 %}
+                    <button class="carousel-control-prev" type="button" data-bs-target="#houseImageCarousel"
+                            data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#houseImageCarousel"
+                            data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                    {% endif %}
+
+                </div>
+
+                <!-- 房源基本信息 -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <h2 class="mb-3">{{ house.title }}</h2>
+                        <div class="price-section mb-3">
+                            <span class="price-tag display-6">¥{{ house.price }}/月</span>
+                        </div>
+                        <div class="house-meta mb-4">
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="text-center p-2 border rounded">
+                                        <div class="text-muted small">户型</div>
+                                        <div class="fw-bold">{{ house.rooms or '未知' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center p-2 border rounded">
+                                        <div class="text-muted small">面积</div>
+                                        <div class="fw-bold">{{ house.area or '未知' }}㎡</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center p-2 border rounded">
+                                        <div class="text-muted small">朝向</div>
+                                        <div class="fw-bold">{{ house.direction or '未知' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center p-2 border rounded">
+                                        <div class="text-muted small">租赁方式</div>
+                                        <div class="fw-bold">{{ house.rent_type or '未知' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            {% if current_user.is_authenticated %}
+                            <div class="d-grid gap-2 d-md-flex">
+                                <a href="{{ url_for('make_appointment', house_id=house.id) }}"
+                                   class="btn btn-warning btn-lg flex-fill me-md-2">
+                                    <i class="fas fa-calendar-check"></i> 预约看房
+                                </a>
+                                <a href="{{ url_for('collect_house', house_id=house.id) }}"
+                                   class="btn btn-sm btn-outline-secondary collect-btn"
+                                   data-house-id="{{ house.id }}">
+                                    {% if house.id in current_user.get_collected_houses() %}
+                                    <i class="fas fa-heart text-danger"></i> 已收藏
+                                    {% else %}
+                                    <i class="far fa-heart"></i> 收藏
+                                    {% endif %}
+                                </a>
+
+                            </div>
+                            {% else %}
+                            <div class="d-grid">
+                                <a href="{{ url_for('login') }}" class="btn btn-warning btn-lg">
+                                    <i class="fas fa-sign-in-alt"></i> 登录后预约看房
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 房源详细信息 -->
+                <div class="row">
+                    <div class="col-12">
+                        <h4 class="mb-3"><i class="fas fa-map-marker-alt"></i> 位置信息</h4>
+                        <div class="card bg-light mb-4">
+                            <div class="card-body">
+                                <p class="mb-1"><strong>区域：</strong>{{ house.region }}</p>
+                                <p class="mb-1"><strong>板块：</strong>{{ house.block or '未提供' }}</p>
+                                <p class="mb-1"><strong>地址：</strong>{{ house.address }}</p>
+                                {% if house.traffic %}
+                                <p class="mb-0"><strong>交通：</strong>{{ house.traffic }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- 配套设施 -->
+                        {% if facilities %}
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <h4 class="mb-3"><i class="fas fa-cube"></i> 配套设施</h4>
+                                <div class="d-flex flex-wrap">
+                                    {% for facility in facilities %}
+                                    <span class="facility-tag">
+                                        <i class="fas fa-check text-success"></i> {{ facility }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- 房源亮点 -->
+                        {% if house.highlights %}
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <h4 class="mb-3"><i class="fas fa-star"></i> 房源亮点</h4>
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        {{ house.highlights }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- 用户评价部分 -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h4 class="mb-3"><i class="fas fa-comments"></i> 用户评价</h4>
+
+                        <!-- 评价统计 -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-3 text-center">
+                                        {% set avg_rating = house.reviews | map(attribute='rating') | sum /
+                                        house.reviews | length if house.reviews else 0 %}
+                                        <div class="display-4 fw-bold">{{ "%.1f"|format(avg_rating) if house.reviews
+                                            else "暂无" }}
+                                        </div>
+                                        <div class="text-muted">平均评分</div>
+                                        <div class="mt-2">
+                                            {% for i in range(1, 6) %}
+                                            {% if i <= avg_rating %}
+                                            <i class="fas fa-star text-warning"></i>
+                                            {% else %}
+                                            <i class="far fa-star text-warning"></i>
+                                            {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <div class="progress mb-2" style="height: 20px;">
+                                            <div class="progress-bar bg-warning" role="progressbar"
+                                                 style="width: {{ (house.reviews | selectattr('rating', 'equalto', 5) | list | length / house.reviews | length * 100) if house.reviews else 0 }}%">
+                                                5星 ({{ house.reviews | selectattr('rating', 'equalto', 5) | list |
+                                                length }})
+                                            </div>
+                                        </div>
+                                        <div class="progress mb-2" style="height: 20px;">
+                                            <div class="progress-bar bg-info" role="progressbar"
+                                                 style="width: {{ (house.reviews | selectattr('rating', 'equalto', 4) | list | length / house.reviews | length * 100) if house.reviews else 0 }}%">
+                                                4星 ({{ house.reviews | selectattr('rating', 'equalto', 4) | list |
+                                                length }})
+                                            </div>
+                                        </div>
+                                        <div class="progress mb-2" style="height: 20px;">
+                                            <div class="progress-bar bg-primary" role="progressbar"
+                                                 style="width: {{ (house.reviews | selectattr('rating', 'equalto', 3) | list | length / house.reviews | length * 100) if house.reviews else 0 }}%">
+                                                3星 ({{ house.reviews | selectattr('rating', 'equalto', 3) | list |
+                                                length }})
+                                            </div>
+                                        </div>
+                                        <div class="progress mb-2" style="height: 20px;">
+                                            <div class="progress-bar bg-secondary" role="progressbar"
+                                                 style="width: {{ (house.reviews | selectattr('rating', 'equalto', 2) | list | length / house.reviews | length * 100) if house.reviews else 0 }}%">
+                                                2星 ({{ house.reviews | selectattr('rating', 'equalto', 2) | list |
+                                                length }})
+                                            </div>
+                                        </div>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-dark" role="progressbar"
+                                                 style="width: {{ (house.reviews | selectattr('rating', 'equalto', 1) | list | length / house.reviews | length * 100) if house.reviews else 0 }}%">
+                                                1星 ({{ house.reviews | selectattr('rating', 'equalto', 1) | list |
+                                                length }})
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 添加评价表单（仅限已登录用户） -->
+                        {% if current_user.is_authenticated %}
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">添加评价</h5>
+                            </div>
+                            <div class="card-body">
+                                <form method="POST" action="{{ url_for('add_review', house_id=house.id) }}">
+                                    <div class="mb-3">
+                                        <label class="form-label">评分</label>
+                                        <div>
+                                            {% for i in range(1, 6) %}
+                                            <input type="radio" id="rating{{ i }}" name="rating" value="{{ i }}"
+                                                   required>
+                                            <label for="rating{{ i }}" class="me-2">
+                                                {% for j in range(i) %}
+                                                <i class="fas fa-star text-warning"></i>
+                                                {% endfor %}
+                                            </label>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="comment" class="form-label">评价内容</label>
+                                        <textarea class="form-control" id="comment" name="comment" rows="3"
+                                                  placeholder="分享您的入住体验..."></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">提交评价</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> 登录后可以发表评价
+                            <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-sm ms-2">立即登录</a>
+                        </div>
+                        {% endif %}
+
+                        <!-- 评价列表 -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">用户评价 ({{ house.reviews | length }})</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if house.reviews %}
+                                {% for review in house.reviews | sort(attribute='created_at', reverse=True) %}
+                                <div class="border-bottom pb-3 mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong>{{ review.user.name }}</strong>
+                                            <div class="text-warning">
+                                                {% for i in range(review.rating) %}
+                                                <i class="fas fa-star"></i>
+                                                {% endfor %}
+                                                {% for i in range(5 - review.rating) %}
+                                                <i class="far fa-star"></i>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <div class="text-muted">
+                                            {{ review.created_at.strftime('%Y-%m-%d') if review.created_at else '' }}
+                                        </div>
+                                    </div>
+                                    {% if review.comment %}
+                                    <div class="mt-2">
+                                        {{ review.comment }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                                {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-comment-slash fa-2x text-muted mb-2"></i>
+                                    <p class="text-muted mb-0">暂无评价，快来抢沙发吧！</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 侧边栏 -->
+    <div class="col-lg-4">
+        <!-- 房东信息 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user"></i> 房东信息</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="landlord-avatar mb-3">
+                    <i class="fas fa-user-circle fa-4x text-secondary"></i>
+                </div>
+                <h6>{{ house.landlord or '未知房东' }}</h6>
+                {% if house.phone_num %}
+                <p class="text-muted">
+                    <i class="fas fa-phone"></i>
+                    <span class="phone-number">{{ house.phone_num }}</span>
+                </p>
+                {% endif %}
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('make_appointment', house_id=house.id) }}"
+                   class="btn btn-warning w-100">
+                    <i class="fas fa-comments"></i> 联系房东
+                </a>
+                {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-outline-primary w-100">
+                    <i class="fas fa-sign-in-alt"></i> 登录联系房东
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 相似推荐 -->
+        {% if similar_houses %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-house-user"></i> 相似房源</h5>
+            </div>
+            <div class="card-body">
+                {% for similar_house in similar_houses %}
+                <div class="similar-house mb-3 pb-3 border-bottom">
+                    <a href="{{ url_for('detail', house_id=similar_house.id) }}" class="text-decoration-none">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0">
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                     style="width: 60px; height: 60px;">
+                                    <i class="fas fa-home text-primary"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-1 text-dark">{{ similar_house.title|truncate(20) }}</h6>
+                                <p class="mb-1 text-primary fw-bold">¥{{ similar_house.price }}/月</p>
+                                <small class="text-muted">{{ similar_house.region }} · {{ similar_house.rooms }}</small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 初始化轮播组件
+        var carouselElement = document.getElementById('houseImageCarousel');
+        if (carouselElement) {
+            try {
+                // 确保Bootstrap对象存在
+                if (typeof bootstrap !== 'undefined' && bootstrap.Carousel) {
+                    var carousel = new bootstrap.Carousel(carouselElement, {
+                        interval: 5000,
+                        pause: 'hover',
+                        wrap: true
+                    });
+                    console.log('Carousel initialized successfully');
+                } else {
+                    console.error('Bootstrap Carousel is not available');
+                }
+            } catch (error) {
+                console.error('Error initializing carousel:', error);
+            }
+        } else {
+            console.error('Carousel element not found');
+        }
+    });
+</script>
+{% endblock %}
+
